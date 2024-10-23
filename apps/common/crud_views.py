@@ -288,7 +288,7 @@ class UploadCategoryCSV(APIView):
         
         task = process_category.delay(decoded_file)
 
-        return Response({'message': 'File is being processed', 'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+        return Response({'message': 'File is being processed'}, status=status.HTTP_202_ACCEPTED)
     
 
 class UploadSubCategoryCSV(APIView):
