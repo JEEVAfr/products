@@ -1,10 +1,12 @@
 import io
 import csv
+import logging
 from celery import shared_task
 from apps.common.models.base import *
 from .serializers import *
 from rest_framework import status
 
+logger = logging.getLogger(__name__)
 
 @shared_task
 def process_category(file_data):
