@@ -81,7 +81,6 @@ def process_subcategory(file_data):
 
 
 @shared_task
-
 def process_product(file_data):
 
     io_string = io.StringIO(file_data)
