@@ -3,8 +3,7 @@ import csv
 from celery import shared_task
 from apps.common.models.base import *
 from .serializers import *
-from rest_framework.response import Response
-from rest_framework import status
+
 
 @shared_task
 def process_category(file_data):
