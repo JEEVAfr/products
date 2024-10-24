@@ -5,7 +5,7 @@ from celery import shared_task
 from apps.common.models.base import *
 from .serializers import *
 from rest_framework import status
-from .crud_views import *
+from .views import *
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def batched_query(queryset, batch_size=10): # retrive the data in batches
             yield entry
 
 @shared_task
-def process_category(file_data, batch_size=10):
+def celery_category(file_data, batch_size=10):
     io_string = io.StringIO(file_data)
     reader = csv.reader(io_string, delimiter=',')
 
@@ -57,7 +57,7 @@ def save_categories(chunk):
 
 
 @shared_task
-def process_subcategory(file_data, batch_size=10):
+def celery_subcategory(file_data, batch_size=10):
 
     io_string = io.StringIO(file_data)
     reader = csv.reader(io_string, delimiter=',')
@@ -104,52 +104,58 @@ def process_subcategory(file_data, batch_size=10):
 
 
 def save_subcategories(chunk):
-
     try:
-        Subcategory.objects.bulk_create(chunk)
+        subcategory_instances = [Subcategory(
+            category=Category.objects.get(id=data['category']),
+            name=data['name'],
+            description=data['description'],
+            slug=data['slug'],
+            status=data['status']
+        ) for data in chunk]
+
+        Subcategory.objects.bulk_create(subcategory_instances)
     except Exception as e:
         print(f"Error during bulk create: {e}")
 
 
 @shared_task
-def process_product(file_data, batch_size=10):
-
+def celery_product(file_data, batch_size=10):
     io_string = io.StringIO(file_data)
     reader = csv.reader(io_string, delimiter=',')
 
     errors = []
     data_chunk = []
     for row in reader:
-
         if not row:
             continue
             
         if len(row) < 9:
-            errors.append({'error': f'Row does not contain enough data: {row}'}, status=status.HTTP_400_BAD_REQUEST)
+            errors.append({'error': f'Row does not contain enough data: {row}'})
             continue
 
         try:
-            category = Category.objects.get(id=row[0])
+            category = Category.objects.get(id=row[0])  # Get actual Category instance
         except Category.DoesNotExist:
-            errors.append({'error': f'Category with ID {row[0]} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+            errors.append({'error': f'Category with ID {row[0]} does not exist'})
             continue
 
         try:
-            subcategory = Subcategory.objects.get(id=row[1])
+            subcategory = Subcategory.objects.get(id=row[1])  # Get actual Subcategory instance
         except Subcategory.DoesNotExist:
-            errors.append({'error': f'Subcategory with ID {row[1]} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+            errors.append({'error': f'Subcategory with ID {row[1]} does not exist'})
             continue
 
+        # Use the actual instances of Category and Subcategory, not just their IDs
         product_data = {
-                'category': category.id, 
-                'subcategory': subcategory.id,  
-                'name': row[2],
-                'description': row[3],
-                'status': row[4].lower() == 'true',  
-                'brand': row[5],
-                'color': row[6],
-                'review': row[7],
-                'rating': row[8],
+            'category': category,  # Pass the actual Category instance
+            'subcategory': subcategory,  # Pass the actual Subcategory instance
+            'name': row[2],
+            'description': row[3],
+            'status': row[4].lower() == 'true',  
+            'brand': row[5],
+            'color': row[6],
+            'review': row[7],
+            'rating': row[8],
         }
 
         data_chunk.append(product_data)
@@ -164,12 +170,27 @@ def process_product(file_data, batch_size=10):
     if errors:
         return {'status': 'failed', 'errors': errors}
 
-    return {'status': 'success', 'message': 'Subcategories uploaded successfully'}
+    return {'status': 'success', 'message': 'Products uploaded successfully'}
 
 
 def save_products(chunk):
-
     try:
-        Product.objects.bulk_create(chunk)
+        # Convert the product data to Product instances
+        product_instances = [
+            Product(
+                category=data['category'],  # Passing the actual model instance
+                subcategory=data['subcategory'],  # Passing the actual model instance
+                name=data['name'],
+                description=data['description'],
+                status=data['status'],
+                brand=data['brand'],
+                color=data['color'],
+                review=data['review'],
+                rating=data['rating']
+            )
+            for data in chunk
+        ]
+        
+        Product.objects.bulk_create(product_instances)
     except Exception as e:
         print(f"Error during bulk create: {e}")

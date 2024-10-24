@@ -27,7 +27,7 @@ def Home(request):
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path('',Home),
-    path('base/', include('apps.common.urls', namespace='common')),
+    path('base/', include('apps.cms.urls')),
 ]
 
 # Static & Media Files

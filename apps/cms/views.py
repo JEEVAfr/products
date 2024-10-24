@@ -1,6 +1,6 @@
 import pandas as pd
 from .serializers import *
-from apps.common.models.base import *
+from .models import *
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -286,7 +286,7 @@ class UploadCategoryCSV(APIView):
         
         decoded_file = csv_file.read().decode('utf-8')
         
-        task = process_category.delay(decoded_file)
+        task = celery_category.delay(decoded_file)
 
         return Response({'message': 'File is being processed'}, status=status.HTTP_202_ACCEPTED)
     
@@ -305,7 +305,7 @@ class UploadSubCategoryCSV(APIView):
         
         decoded_file = csv_file.read().decode('-utf-8')
 
-        task = process_subcategory.delay(decoded_file)
+        task = celery_subcategory.delay(decoded_file)
 
         return Response({'message' : 'File is being processed'}, status=status.HTTP_202_ACCEPTED)
 
@@ -323,7 +323,7 @@ class UploadProductCSV(APIView):
         
         decoded_file = csv_file.read().decode('-utf-8')
         
-        task = process_product.delay(decoded_file)
+        task = celery_product.delay(decoded_file)
 
         return Response({'message' : 'File is being processed'}, status=status.HTTP_202_ACCEPTED)
 

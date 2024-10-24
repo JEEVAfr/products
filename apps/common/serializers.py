@@ -4,8 +4,6 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework.fields import SkipField
 from rest_framework.serializers import ModelSerializer, Serializer
-from .models import *
-from .models.base import *
 
 
 
@@ -389,38 +387,6 @@ class FileModelToURLField(serializers.Field):
 
         return value.file.url
     
-class CategorySerializer(serializers.ModelSerializer):
 
-    class Meta:
-
-        model = Category
-        fields = '__all__'
-
-class SubcategorySerializer(serializers.ModelSerializer):
-
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-
-    class Meta:
-        model = Subcategory
-        fields = '__all__'
-
-class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-    subcategory = serializers.PrimaryKeyRelatedField(queryset=Subcategory.objects.all())
-
-    class Meta:
-        model = Product
-        fields = '__all__'
-
-
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
-
-    def validate_old_password(self, value):
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Old password is incorrect.")
-        return value
 
 
