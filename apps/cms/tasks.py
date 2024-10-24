@@ -134,21 +134,21 @@ def celery_product(file_data, batch_size=10):
             continue
 
         try:
-            category = Category.objects.get(id=row[0])  # Get actual Category instance
+            category = Category.objects.get(id=row[0])  
         except Category.DoesNotExist:
             errors.append({'error': f'Category with ID {row[0]} does not exist'})
             continue
 
         try:
-            subcategory = Subcategory.objects.get(id=row[1])  # Get actual Subcategory instance
+            subcategory = Subcategory.objects.get(id=row[1])  
         except Subcategory.DoesNotExist:
             errors.append({'error': f'Subcategory with ID {row[1]} does not exist'})
             continue
 
-        # Use the actual instances of Category and Subcategory, not just their IDs
+        
         product_data = {
-            'category': category,  # Pass the actual Category instance
-            'subcategory': subcategory,  # Pass the actual Subcategory instance
+            'category': category, 
+            'subcategory': subcategory,  
             'name': row[2],
             'description': row[3],
             'status': row[4].lower() == 'true',  
@@ -175,11 +175,11 @@ def celery_product(file_data, batch_size=10):
 
 def save_products(chunk):
     try:
-        # Convert the product data to Product instances
+
         product_instances = [
             Product(
-                category=data['category'],  # Passing the actual model instance
-                subcategory=data['subcategory'],  # Passing the actual model instance
+                category=data['category'], 
+                subcategory=data['subcategory'],  
                 name=data['name'],
                 description=data['description'],
                 status=data['status'],
